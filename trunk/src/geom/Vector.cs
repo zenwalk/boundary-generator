@@ -37,8 +37,11 @@ namespace Mwsw.Geom {
     /// The length, squared.
     public double LengthSq { get { return Dot(this,this); } }
     
-    // The length
+    /// The length.
     public double Length { get { return Math.Sqrt(LengthSq); } }
+
+    /// A perpendicular: (easy in 2d)
+    public Vector Perp { get { return new Vector(-m_y,m_x); } }
 
     /// Normalize to length one:
     public Vector Normalized() { 
@@ -59,11 +62,41 @@ namespace Mwsw.Geom {
       return Math.Acos(num/den);
     }
 
-    /// Test whether two vectors are parallel within a specified
-    ///  tolerance ( radians).
-    public static bool AreParallel(Vector a, Vector b, double tolerance) {
-      return AngleBetween(a,b) <= tolerance;
+    /// A parallel check w/ a tolerance. Tolerance for a specific angle theta
+    ///  is expressed as cos(theta)^2. Tolerances >= 90 degrees are 
+    public static bool AreParallel(Vector a, Vector b, double costol) {
+      double dp = Dot(a,b); // (a.Length * b.Length * cos(theta))
+      double dpsq = dp * dp; // (a.LengthSq * b.LengthSq * cos(theta)^2)
+
+      // Consider the first quadrant only.
+      //  Cos(theta) strictly decreases for 0 <= theta <= pi/2.
+      //  Thus if theta_a <= theta_b, cos(theta_a) >= cos(theta_b)
+      //                            , cos(theta_a)^2 >= cos(theta_b)^2
+      //                            , x * cos(theta_a)^2 >= x * cos(theta_b)^2
+      //                               (for x > 0)
+      return (dpsq >= costol * a.LengthSq * b.LengthSq);
     }
+
+    /// Helper for AreParallel: generate a tolerance value for a given angle
+    ///  in radians:
+    public static double GetParTolerance(double theta) {
+      double v = Math.Cos(theta);
+      return v*v;
+    }
+
+    public static Vector operator -(Vector a, Vector b) {
+      return new Vector(a.X - b.X,a.Y-b.Y);
+    }
+
+    public static Vector operator +(Vector a, Vector b) {
+      return new Vector(a.X + b.X,a.Y+b.Y);
+    }
+
+    public static Vector operator * (Vector a, double b) {
+      return new Vector(a.X * b, a.Y * b);
+    }
+    public static Vector operator * (double a, Vector b) { return b*a; }
+    
   }
 
 }
