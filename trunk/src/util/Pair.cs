@@ -14,3 +14,14 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *****/
+
+namespace Mwsw.Util {
+  
+  public class Pair<A,B> {
+    private A m_a; private B m_b;
+    public Pair(A a, B b) { m_a = a; m_b = b; }
+    public A First { get { return m_a; } }
+    public B Second { get { return m_b; } }
+
+  }
+}

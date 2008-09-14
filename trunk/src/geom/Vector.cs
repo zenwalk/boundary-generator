@@ -62,6 +62,14 @@ namespace Mwsw.Geom {
       return Math.Acos(num/den);
     }
 
+    /// Rotate the vector by the given angle (in radians)
+    public Vector Rotate(double theta) {
+      double xamount = Math.Cos(theta);
+      double yamount = Math.Sin(theta);
+      return new Vector(m_x * xamount - m_y * yamount,
+			m_x * yamount + m_y * xamount);
+    }
+
     /// A parallel check w/ a tolerance. Tolerance for a specific angle theta
     ///  is expressed as cos(theta)^2. Tolerances >= 90 degrees are 
     public static bool AreParallel(Vector a, Vector b, double costol) {

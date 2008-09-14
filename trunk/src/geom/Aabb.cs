@@ -34,6 +34,10 @@ namespace Mwsw.Geom {
 	       amin <= max );
     }
 
+    public Vector Origin { get { return new Vector(m_xmin,m_ymin); } }
+    public double W { get { return m_xmax-m_xmin; } } 
+    public double H { get { return m_ymax-m_ymin; } } 
+
     /// Intersection test
     public bool Intersects(LineSeg l) {
       // Seperating axis method.
