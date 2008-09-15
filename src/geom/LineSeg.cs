@@ -52,7 +52,7 @@ namespace Mwsw.Geom {
       tval = Vector.Dot(dp,m_v) / Vector.Dot(m_v,m_v);
       
       Vector pt = m_start + (tval * m_v);
-      return pt.LengthSq;
+      return (coord - pt).LengthSq;
     }
 
     /// Convenience wrapper if you don't care about the t value.
@@ -61,18 +61,30 @@ namespace Mwsw.Geom {
       return PointDistanceSq(c, out ignored);
     }
 
-    /// Overlay two lines.
+    /// Overlay two lines with given tolerances.
     /// (see Vector.GetParTolerance for the parallel tolerance; the
     ///  distance tolerance should be a distance^2.)
+    /// Outputs are: the overlap itself,
+    ///  any leftover bits prior to the overlap,
+    ///  any leftover bits afterwards,
+    ///  and two booleans indicating which lineseg 'owns' the leftovers.
     public static void Overlay(LineSeg a,
 			       LineSeg b,
 			       double par_tolerance, 
 			       double sep_dist_squared,
 			       out LineSeg prior,
+			       out bool a_is_prior,
 			       out LineSeg overlap,
-			       out LineSeg after) {
-      prior = null; overlap = null; after = null;
-      
+			       out LineSeg after,
+			       out bool a_is_after) {
+      // A t-value epsilon...
+      double epsilon = sep_dist_squared / a.Dir.LengthSq;
+
+      // Console.Write("   epsilon..." + epsilon + "   ");
+
+      prior = null; overlap = null; after = null; 
+      a_is_prior = false; a_is_after = false;
+
       // If they aren't parallel, we're done.
       if (!Vector.AreParallel(a.Dir,b.Dir, par_tolerance))
 	return;
@@ -87,39 +99,50 @@ namespace Mwsw.Geom {
       if (distsq > sep_dist_squared) // too far away
 	return;
       
+      //       Console.WriteLine("   start t: " + a_tval + ", " + a_nd_tval);
+
       // The lines themselves are overlapping but the line
       //  segments might not be, in which case neither of b's endpoints
       //   will generate a tval in the [0,1] interval:
-      if ( (a_tval < 0.0 && a_nd_tval > 1.0) || 
-	   (a_nd_tval < 0.0 && a_tval > 1.0) )
+      if ( (a_tval + epsilon < 0.0 && a_nd_tval - epsilon > 1.0) || 
+	   (a_nd_tval + epsilon < 0.0 && a_tval - epsilon > 1.0) ||
+	   (a_tval + epsilon < 0.0 && a_nd_tval + epsilon < 0.0) ||
+	   (a_tval - epsilon > 1.0 && a_nd_tval - epsilon > 1.0) )
 	return;
 
+      // Console.WriteLine("Setting overlap.");
       // Definitely an overlap.
       // Threshold a_tval and a_nd_tval into [0,1] for the overlapping portion.
       double st_t = Math.Min(a_tval, a_nd_tval);
       double nd_t = Math.Max(a_tval, a_nd_tval);
       double clamp_st_t = Math.Max(st_t, 0.0);
       double clamp_nd_t = Math.Min(nd_t, 1.0);
-      
+
       overlap = new LineSeg(a.Start + (clamp_st_t * a.Dir),
-			    a.Start + (clamp_nd_t * a.Dir));
+			    ((clamp_nd_t - clamp_st_t) * a.Dir));
 
       // Find any leftover, non-overlapping portions of a and b:
 
-      if (st_t < 0.0) // some of line b is before line a's start
+      if (st_t < 0.0) { // some of line b is before line a's start
 	prior = FromEndpoints(a.Start + (st_t * a.Dir), a.Start);
-      else if (st_t > 0.0) // some of line a is left over
+	a_is_prior = false;
+      } else if (st_t > 0.0) { // some of line a is left over
 	prior = FromEndpoints(a.Start, a.Start + (st_t * a.Dir));
+	a_is_prior = true;
+      }
       
-      if (nd_t > 1.0) // Some of 'b' is after a's end:
+      if (nd_t > 1.0) { // Some of 'b' is after a's end:
 	after = FromEndpoints(a.End, a.Start + (nd_t * a.Dir));
-      else if (nd_t < 1.0) // some of 'a' leftover.
+	a_is_after = false;
+      } else if (nd_t < 1.0) { // some of 'a' leftover.
 	after = FromEndpoints(a.Start + (nd_t * a.Dir), a.End);
-      
+	a_is_after = true;
+      }
+
       // Null out the leftovers if they aren't larger than the tolerance:
-      if (prior.Dir.LengthSq < sep_dist_squared)
+      if (prior != null && prior.Dir.LengthSq < sep_dist_squared)
 	prior = null;
-      if (after.Dir.LengthSq < sep_dist_squared)
+      if (after != null && after.Dir.LengthSq < sep_dist_squared)
 	after = null;
     }
 

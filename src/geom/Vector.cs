@@ -44,7 +44,7 @@ namespace Mwsw.Geom {
     public Vector Perp { get { return new Vector(-m_y,m_x); } }
 
     /// Normalize to length one:
-    public Vector Normalized() { 
+    public Vector Normalize() { 
       if (m_x == 0.0 && m_y == 0.0) // Avoid a divide-by-zero.
 	return this;
 

@@ -119,5 +119,13 @@ namespace Mwsw.Test {
       return new Vector(Double(),Double());
     }
     public IEnumerable<Vector> Vectors { get { return Gen<Vector>(GenVector); } }
+
+    public IEnumerable<LineSeg> LineSegs { 
+      get {
+	foreach (Pair<Vector,Vector> vs in Zip<Vector,Vector>(Vectors,Vectors)) {
+	  yield return LineSeg.FromEndpoints(vs.First,vs.Second);
+	}
+      }
+    }
   }
 }

@@ -32,8 +32,12 @@ namespace Mwsw.Test {
       double perptol = Vector.GetParTolerance(0.001 / 180.0 * Math.PI);
 
       foreach (Vector v in Take(1000,Vectors)) {
+	// These should be zero or very close to it.
 	Assert.Less(Math.Abs(Vector.Dot(v,v.Perp)), 0.00001);
 	Assert.Less(Math.Abs(Vector.Dot(v,v.Rotate(ninety))), 0.00001);
+
+	// A vector dot itself ...
+	Assert.Less(Vector.Dot(v,v), v.LengthSq + 0.000001);
 
 	// A check that a vector and its perp are parallel too.
 	Assert.IsTrue(Vector.AreParallel(v.Perp,v.Rotate(ninety), perptol));
