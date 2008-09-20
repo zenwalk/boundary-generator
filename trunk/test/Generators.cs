@@ -83,11 +83,27 @@ namespace Mwsw.Test {
 
     public bool Boolean() { return m_r.Next(1) == 1; }
 
+    public Aabb GenAabb() {
+      double minx = Double();
+      double maxx = Double();
+      double miny = Double();
+      double maxy = Double();
+      if (maxx < minx) {
+	double t = maxx; maxx = minx ; minx = t;
+      }
+      if (maxy < miny) {
+	double t = maxy; maxy = miny; miny = t;
+      }
+      return new Aabb(minx,maxx,miny,maxy);
+    }
+
+    public IEnumerable<Aabb> Aabbs { get { return Gen<Aabb>(GenAabb); } }
+
     public Vector PointInside(Aabb bounds) {
       double x = Double() * bounds.W;
       double y = Double() * bounds.H;
       Vector v = new Vector(x,y);
-      return v - bounds.Origin;
+      return v + bounds.Origin;
     }
 
     public Vector PointOutside(Aabb bounds) {
