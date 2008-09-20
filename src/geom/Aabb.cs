@@ -38,13 +38,39 @@ namespace Mwsw.Geom {
     public double W { get { return m_xmax-m_xmin; } } 
     public double H { get { return m_ymax-m_ymin; } } 
 
-    /// Intersection test
+    public static Aabb ConstructForPoints(System.Collections.Generic.IEnumerable<Vector> pts) {
+      double xmin = 0.0;
+      double xmax = 0.0;
+      double ymin = 0.0;
+      double ymax = 0.0;
+      bool first = true;
+
+      foreach (Vector v in pts) {
+	if (first) {
+	  xmin = v.X; xmax = v.X; ymin = v.Y; ymax = v.Y; first = false;
+	} else {
+	  xmin = Math.Min(xmin,v.X);
+	  xmax = Math.Max(xmax,v.X);
+	  ymin = Math.Min(ymin,v.Y);
+	  ymax = Math.Max(ymax,v.Y);
+	}
+      }
+      return new Aabb(xmin,xmax,ymin,ymax);
+    }
+
+    /// Intersection test for other aabb's
+    public bool Intersects(Aabb o) {
+      return (intervalsOverlap(o.m_xmin, o.m_xmax, m_xmin, m_xmax) &&
+	      intervalsOverlap(o.m_ymin, o.m_ymax, m_ymin, m_ymax));
+    }
+
+    /// Intersection test for line segments..
     public bool Intersects(LineSeg l) {
       // Seperating axis method.
       Vector sp = l.Start;
       Vector ep = l.End;
       Vector dir = l.Dir;
-      
+
       // Projection onto the x & y axis & check for overlap
       if (!intervalsOverlap(sp.X,ep.X,m_xmin,m_xmax))
 	return false;
@@ -53,25 +79,33 @@ namespace Mwsw.Geom {
 
       // Test line-sidedness 
       Vector ll = new Vector(m_xmin,m_ymin) - sp;
-      int sign = Math.Sign(Vector.Dot(dir,ll));
+      int side = dir.Side(ll);
       
-      if (sign == 0) // irritating edge case: ll is directly perp to the line direction. Correct via perturbation?
+      if (side == 0) // irritating edge case: ll is directly perp to the line direction. Correct via perturbation?
 	throw new Exception("TODO: Edge case box-corner-perp-to-line.");
 
       Vector lr = new Vector(m_xmax,m_ymin) - sp;
-      if (sign != Math.Sign(Vector.Dot(dir,lr))) // side change
+      
+      if (side != dir.Side(lr))
 	return true;
 	
       Vector ul = new Vector(m_xmin,m_ymax) - sp;
-      if (sign != Math.Sign(Vector.Dot(dir,ul))) 
+      if (side != dir.Side(ul))
 	return true;
 
       Vector ur = new Vector(m_xmax,m_ymax) - sp;
-      if (sign != Math.Sign(Vector.Dot(dir,ur))) 
+      if (side != dir.Side(ur))
 	return true;
 
       // If we got here, all 4 corners lie on the same side of the line
       return false; 
+    }
+
+    public Aabb Grown(double dist) {
+      return new Aabb(m_xmin - dist,
+		      m_xmax + dist,
+		      m_ymin - dist,
+		      m_xmax + dist);
     }
 
     public void QuadBreak(out Aabb ll,

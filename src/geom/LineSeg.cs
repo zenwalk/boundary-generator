@@ -28,12 +28,9 @@ namespace Mwsw.Geom {
     private Vector m_start;
 
     public LineSeg(Vector st, Vector dir) { m_v = dir; m_start = st; }
-    public LineSeg(double x0, double y0, double x1, double y1) {
-      m_v = new Vector(x1-x0, y1-y0);
-      m_start = new Vector(x0,y0);
-    }
+
     public static LineSeg FromEndpoints(Vector st, Vector nd) {
-      return new LineSeg(st.X,st.Y,nd.X,nd.Y);
+      return new LineSeg(st, nd-st);
     }
 
     public Vector Start { get { return m_start; } }
@@ -77,10 +74,8 @@ namespace Mwsw.Geom {
 			       out LineSeg overlap,
 			       out LineSeg after,
 			       out bool a_is_after) {
-      // A t-value epsilon...
-      double epsilon = sep_dist_squared / a.Dir.LengthSq;
 
-      // Console.Write("   epsilon..." + epsilon + "   ");
+      double epsilon = sep_dist_squared / a.Dir.LengthSq;
 
       prior = null; overlap = null; after = null; 
       a_is_prior = false; a_is_after = false;
@@ -99,8 +94,6 @@ namespace Mwsw.Geom {
       if (distsq > sep_dist_squared) // too far away
 	return;
       
-      //       Console.WriteLine("   start t: " + a_tval + ", " + a_nd_tval);
-
       // The lines themselves are overlapping but the line
       //  segments might not be, in which case neither of b's endpoints
       //   will generate a tval in the [0,1] interval:
@@ -110,7 +103,6 @@ namespace Mwsw.Geom {
 	   (a_tval - epsilon > 1.0 && a_nd_tval - epsilon > 1.0) )
 	return;
 
-      // Console.WriteLine("Setting overlap.");
       // Definitely an overlap.
       // Threshold a_tval and a_nd_tval into [0,1] for the overlapping portion.
       double st_t = Math.Min(a_tval, a_nd_tval);

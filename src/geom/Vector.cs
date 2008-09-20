@@ -52,6 +52,13 @@ namespace Mwsw.Geom {
       return new Vector(m_x/len,m_y/len);
     }
 
+    /// Return which side of the line the given point lays on.
+    ///  -1 for left; 0 for an intersect; 1 for positive.
+    public int Side(Vector ov) {
+      double val = Vector.Dot(ov, this.Perp);
+      return Math.Sign(val);
+    }
+
     /// Get the angle of the vector (in radians)
     public double Angle { get { return Math.Atan2(m_y,m_x); } } 
 
@@ -77,7 +84,7 @@ namespace Mwsw.Geom {
       double dpsq = dp * dp; // (a.LengthSq * b.LengthSq * cos(theta)^2)
 
       // Consider the first quadrant only.
-      //  Cos(theta) strictly decreases for 0 <= theta <= pi/2.
+      //  Cos(theta) strictly decreases for 0 <= theta <= pi/2 as theta grows.
       //  Thus if theta_a <= theta_b, cos(theta_a) >= cos(theta_b)
       //                            , cos(theta_a)^2 >= cos(theta_b)^2
       //                            , x * cos(theta_a)^2 >= x * cos(theta_b)^2

@@ -164,9 +164,15 @@ namespace Mwsw.Test {
       foreach (LineSeg l in Take(1000,LineSegs)) {
 	
 	double t = Double(); // 0..1
-	t += 2;
+	Vector dir = l.Dir;
+	if (Boolean()) {
+	  t *= -1;
+	  dir = dir * -1.0;
+	} else {
+	  t += 1.001;
+	}
 	LineSeg ll = new LineSeg(l.Start + (l.Dir * t),
-				 l.Dir);
+				 dir);
 	LineSeg o = null; LineSeg before = null; LineSeg after = null;
 	bool ab,af;
 	
