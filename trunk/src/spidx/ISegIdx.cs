@@ -40,5 +40,8 @@ namespace Mwsw.Spidx {
 
     /// Return all segements that might lie w/in a given distance.
     IEnumerable<IIndexedSeg> SearchByLineSeg(LineSeg o, double dist);
+
+    /// Return all segements that might lie w/in a given distance.
+    IEnumerable<IIndexedSeg> AllSegments { get; }
   }
 }

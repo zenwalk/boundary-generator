@@ -36,12 +36,15 @@ namespace Mwsw.Spidx {
     public IIndexedSeg Insert(IHasLine v) { return new Handle(m_segments.AddFirst(v)); }
 
     public Pair<IIndexedSeg, IIndexedSeg> Split(IIndexedSeg tosplit,
-					 IHasLine a,
-					 IHasLine b) {
+						IHasLine a,
+						IHasLine b) {
+
+      Handle na = new Handle(m_segments.AddFirst(a));
+      Handle nb = new Handle(m_segments.AddFirst(b));
+
       Handle h = tosplit as Handle;
-      Handle na = new Handle(h.Node.List.AddAfter(h.Node,a));
-      Handle nb = new Handle(h.Node.List.AddAfter(h.Node,b));
-      h.Node.List.Remove(h.Node);
+      m_segments.Remove(h.Node);
+
       return new Pair<IIndexedSeg, IIndexedSeg>(na,nb);
     }
 
@@ -53,5 +56,16 @@ namespace Mwsw.Spidx {
 	cur = cur.Next;
       }
     }
+
+    public IEnumerable<IIndexedSeg> AllSegments { 
+      get { 
+	LinkedListNode<IHasLine> nd = m_segments.First;
+	while (nd != null) {
+	  yield return new Handle(nd);
+	  nd = nd.Next;
+	}
+      } 
+    }
+
   }
 }

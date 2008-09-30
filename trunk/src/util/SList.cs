@@ -39,6 +39,8 @@ namespace Mwsw.Util {
       return new SList<T>(val, this);
     }
 
+    public T HeadVal { get { return m_v; } }
+
     System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() {
       SList<T> cur = this;
       while (cur != Nil) {

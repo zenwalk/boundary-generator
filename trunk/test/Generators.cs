@@ -78,6 +78,8 @@ namespace Mwsw.Test {
       }
     }
 
+    public int Int() { return m_r.Next(); }
+    public int Int(int max) { return m_r.Next(max); }
     public double Double() { return m_r.NextDouble(); }
     public IEnumerable<double> Doubles { get { return Gen<double>(Double); } }
 

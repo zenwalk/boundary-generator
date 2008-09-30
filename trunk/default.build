@@ -40,4 +40,11 @@
       <test assemblyname="build/tests.dll"/>
     </nunit2>
   </target>
+
+  <target name="specific-test" depends="buildtests">
+    <nunit2>
+      <formatter type="Plain"/>
+      <test assemblyname="build/tests.dll" testname="${test}"/>
+    </nunit2>
+  </target>
 </project>

@@ -36,6 +36,14 @@ namespace Mwsw.Ops {
       m_dtolsq = dist_tol * dist_tol;
     }
 
+    public IEnumerable<Pair<LineSeg, IEnumerable<T> > > Segments {
+      get {
+	foreach (IIndexedSeg s in m_index.AllSegments) {
+	  Fragment f = s.Val as Fragment;
+	  yield return new Pair<LineSeg, IEnumerable<T> >(f.LineSeg, f.Sources);
+	}
+      }
+    }
 
     private class Fragment : IHasLine {
       private LineSeg m_l;
@@ -45,88 +53,138 @@ namespace Mwsw.Ops {
       public Fragment Next; // next connected fragment
       public void Split(out Fragment a, LineSeg aseg,
 			out Fragment b, LineSeg bseg) {
-	a = new Fragment(); a.LineSeg = aseg; a.Sources = Sources;
-	b = new Fragment(); b.LineSeg = bseg; b.Sources = Sources;
+	a = new Fragment(); a.m_l = aseg; a.Sources = this.Sources;
+	b = new Fragment(); b.m_l = bseg; b.Sources = this.Sources;
 	a.Prev = Prev; a.Next = b;
 	b.Prev = a; a.Next = Next;
       }
+      public override string ToString() {
+	String r = "Frag(" + m_l ;
+	foreach (T s in Sources)
+	  r = r + "," + s;
+	r += ")";
+	return r;
+      }
     }
     
+    private bool insertFrag(T src, 
+			    LineSeg l,
+			    IIndexedSeg cand,
+			    Stack<IIndexedSeg> cand_remainders,
+			    Stack<LineSeg> l_remainders) {
+      Fragment frag = cand.Val as Fragment;
+
+      LineSeg a,b,o; bool l_before, l_after;
+      LineSeg.Overlay(l, frag.LineSeg, m_atol, m_dtolsq,
+		      out b, out l_before, // leftover before
+		      out o,
+		      out a, out l_after); // leftover after
+
+      if (o != null) { // There was an overlay...
+	// For partial overlays, manage any leftovers that are
+	// already in the index.
+	if (b != null && !l_before) {
+            Fragment nfraga, nfragb;
+            frag.Split(out nfraga, b, out nfragb, o);
+            Pair<IIndexedSeg,IIndexedSeg> sp = 
+              m_index.Split(cand, nfraga, nfragb);
+
+            // relable 'c' and 'frag' to point at the overlaping part.
+	    cand_remainders.Push(sp.First);
+            cand = sp.Second;
+            frag = nfragb; 
+	}
+          
+	if (a != null && !l_after) {
+	  Fragment nfraga, nfragb;
+	  frag.Split(out nfraga, o, out nfragb, a);
+	  Pair<IIndexedSeg,IIndexedSeg> sp = 
+	    m_index.Split(cand, nfraga, nfragb);
+	  
+	  // relable 'c' and 'frag' to point at the overlaping part.
+	  cand_remainders.Push(sp.Second);
+	  cand = sp.First;
+	  frag = nfraga;
+	}
+
+	// Attribute the overlapping portion w/ the source line.
+	frag.Sources = frag.Sources.Cons(src);
+	
+	// And manage any leftovers that are -not- part of the index.
+	if (b != null && l_before)
+	  l_remainders.Push(b);
+	if (a != null && l_after)
+	  l_remainders.Push(a);
+	
+	return true;
+      } else {
+	// No overlap so leftovers are complete.
+	cand_remainders.Push(cand);
+	return false;
+      }
+    }
+			      
+
+
     /// Insert the given line.
     /// 
-    ///  TODO: FUTURE: Make the results of this completely independent
-    ///                of insertion order... (tricky due to tolerance
+    ///  TODO: FUTURE: Make the results of this independent of
+    ///                insertion order... (tricky due to tolerance
     ///                issues; what if lines a and b are within the
     ///                tol-distance; ditto b and c, but a and c are
     ///                not -- order will matter!)
     public void Insert(T line) {
-      
+      //      Console.Error.WriteLine("Insert...." + line);
+
       Stack<LineSeg> working_set = new Stack<LineSeg>();
       working_set.Push(line.LineSeg);
 
 	// Find all candidates...
       Stack<IIndexedSeg> candidates = new Stack<IIndexedSeg>();
-      foreach (IIndexedSeg cand in m_index.SearchByLineSeg(line.LineSeg, m_dtol))
+      foreach (IIndexedSeg cand in 
+	       m_index.SearchByLineSeg(line.LineSeg, m_dtol))
 	candidates.Push(cand);
 
-      //NOT GOOD ENOUGH I AM HERE.
-      while (working_set.Count > 0 && candidates.Count > 0) {
-	
-	// Pop
+      // Match the candidates vs. the given line segment.
+      Stack<LineSeg> unmatched = new Stack<LineSeg>();
+
+      while (working_set.Count > 0) {
 	LineSeg l = working_set.Pop();
-	IIndexedSeg cand = candidates.Pop();
-	Fragment frag = cand.Val as Fragment;
 	
-	LineSeg a,b,o; bool l_before, l_after;
-	LineSeg.Overlay(frag.LineSeg, l, m_atol, m_dtolsq,
-			out b, out l_before,
-			out o,
-			out a, out l_after);
-	  
-	if (o != null) { // Overlap
-	  // There are some 'leftovers' which don't overlap and
-	  //  are already present in the index.
-	  // -- 
-	  if (b != null && !l_before) {
-	    Fragment nfraga, nfragb;
-	    frag.Split(out nfraga, b, out nfragb, o);
-	    Pair<IIndexedSeg,IIndexedSeg> sp = 
-	      m_index.Split(cand, nfraga, nfragb);
+	//Console.Error.WriteLine("Part :" + l);
 
-	    // relable 'c' and 'frag' to point at the overlaping part.
-	    cand = sp.Second;
-	    frag = nfragb; 
-	  }
+	Stack<IIndexedSeg> ncands = new Stack<IIndexedSeg>();
+	//	Console.Error.WriteLine("cands::" + candidates.Count);
+	//	foreach (IIndexedSeg c in candidates)
+	//  Console.Error.WriteLine("    " + c.Val);
 	  
-	  if (a != null && !l_after) {
-	    Fragment nfraga, nfragb;
-	    frag.Split(out nfraga, o, out nfragb, a);
-	    Pair<IIndexedSeg,IIndexedSeg> sp = 
-	      m_index.Split(cand, nfraga, nfragb);
+	bool intersected = false;
 
-	    // relable 'c' and 'frag' to point at the overlaping part.
-	    cand = sp.First;
-	    frag = nfraga;
+	while (!intersected && candidates.Count > 0) {
+	  IIndexedSeg cand = candidates.Pop();
+	  intersected = insertFrag(line,l,cand,ncands,working_set);
+	  if (!intersected) {
+	    ncands.Push(cand);
 	  }
-	  // --
-	  
-	  // Add 'T' to the overlap's list of contributors
-	  frag.Sources = frag.Sources.Cons(line);
-	  
-	  // Is there any of the line left to insert?
-	  if (b != null & l_before)
-	    working_set.Push(b);
-	  if (a != null && l_after)
-	    working_set.Push(a);
 	}
+
+	//	Console.Error.WriteLine("intr? " + intersected + ", working_set:" + working_set.Count);
+
+	if (!intersected)
+	  unmatched.Push(l);
+	
+	while (candidates.Count > 0)
+	  ncands.Push(candidates.Pop());
+
+	candidates = ncands;
       }
 
       // Any unmatched pieces of the line:
-      foreach (LineSeg unmatched in working_set) {
+      foreach (LineSeg l in unmatched) {
 	Fragment fresh = new Fragment();
 	fresh.Prev = null; fresh.Next = null;
 	fresh.Sources = SList<T>.Nil.Cons(line);
-	fresh.LineSeg = unmatched;
+	fresh.LineSeg = l;
 	m_index.Insert(fresh);
       }
     }

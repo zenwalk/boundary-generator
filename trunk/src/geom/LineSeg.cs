@@ -74,9 +74,6 @@ namespace Mwsw.Geom {
 			       out LineSeg overlap,
 			       out LineSeg after,
 			       out bool a_is_after) {
-
-      double epsilon = sep_dist_squared / a.Dir.LengthSq;
-
       prior = null; overlap = null; after = null; 
       a_is_prior = false; a_is_after = false;
 
@@ -96,22 +93,32 @@ namespace Mwsw.Geom {
       
       // The lines themselves are overlapping but the line
       //  segments might not be, in which case neither of b's endpoints
-      //   will generate a tval in the [0,1] interval:
-      if ( (a_tval + epsilon < 0.0 && a_nd_tval - epsilon > 1.0) || 
-	   (a_nd_tval + epsilon < 0.0 && a_tval - epsilon > 1.0) ||
-	   (a_tval + epsilon < 0.0 && a_nd_tval + epsilon < 0.0) ||
-	   (a_tval - epsilon > 1.0 && a_nd_tval - epsilon > 1.0) )
+      //   will generate a tval in the [0,1] interval.
+
+      double st_t = Math.Min(a_tval, a_nd_tval); // Order things so a
+      double nd_t = Math.Max(a_tval, a_nd_tval); // line from st_t to
+						 // nd_t will be
+						 // parallel to A.
+
+      // If the overlap is completely outside of a, done:
+      if (st_t > 1.0) 
+	return;
+      if (nd_t < 0.0)
 	return;
 
-      // Definitely an overlap.
+      // There's an overlap.
       // Threshold a_tval and a_nd_tval into [0,1] for the overlapping portion.
-      double st_t = Math.Min(a_tval, a_nd_tval);
-      double nd_t = Math.Max(a_tval, a_nd_tval);
       double clamp_st_t = Math.Max(st_t, 0.0);
       double clamp_nd_t = Math.Min(nd_t, 1.0);
 
       overlap = new LineSeg(a.Start + (clamp_st_t * a.Dir),
 			    ((clamp_nd_t - clamp_st_t) * a.Dir));
+
+      // Don't return overlaps shorter than the error distance...
+      if (overlap.Dir.LengthSq < sep_dist_squared) {
+	overlap = null;
+	return;
+      }
 
       // Find any leftover, non-overlapping portions of a and b:
 
@@ -137,7 +144,10 @@ namespace Mwsw.Geom {
       if (after != null && after.Dir.LengthSq < sep_dist_squared)
 	after = null;
     }
-
+    
+    public override string ToString() {
+      return "[" + Start + "->" + End + "]";
+    }
 
   }
 }
