@@ -112,6 +112,10 @@ namespace Mwsw.Geom {
     }
     public static Vector operator * (double a, Vector b) { return b*a; }
     
+
+    public override string ToString() {
+      return "(" + X + "," + Y + ")";
+    }
   }
 
 }

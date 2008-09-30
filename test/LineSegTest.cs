@@ -23,51 +23,75 @@ namespace Mwsw.Test {
 
   [TestFixture()]
   public class LineSegTest : Generators {
+    protected virtual void OverlayFn(LineSeg a,
+					   LineSeg b,
+					   double ang_tol,
+					   double distsqtol,
+					   out LineSeg before,
+					   out bool a_before,
+					   out LineSeg overlap,
+					   out LineSeg after,
+					   out bool a_after) {
+      LineSeg.Overlay(a,b,Vector.GetParTolerance(ang_tol),distsqtol,
+		      out before,out a_before,out overlap,
+		      out after,out a_after);
+    }
     
-    
+    private void AssertNoOverlap(LineSeg la, LineSeg lb, double av, double dv) {
+      LineSeg o,b,a; bool ab,aa;
+      OverlayFn(la,lb,av,dv,out b, out ab, out o, out a, out aa);
+      Assert.IsNull(o);
+    }
+
     // Test direct overlaps w/in a distance by shifting them..
     [Test()]
     public void TestOverlapsShifted() {
-      double partol = Vector.GetParTolerance(0.001 / 180.0 * Math.PI);
+      double ang_tol = (0.001 / 180.0 * Math.PI);
 
       foreach(LineSeg l in Take(1000,LineSegs)) {
+
 	double dist = Double();
 	double dist_sq = (dist * dist) * 1.00001;
+	while (dist_sq > l.Dir.LengthSq) {
+	  dist = Double();
+	  dist_sq = (dist * dist) * 1.00001;
+	}
+
 	Vector shift = l.Dir.Perp.Normalize() * dist;
 	LineSeg ll = new LineSeg(l.Start + shift,l.Dir);
 
-
 	LineSeg o = null; LineSeg before = null; LineSeg after = null;
 	bool ab, af;
+
 	// First, with itself:
-	LineSeg.Overlay(l,l, partol, dist_sq,
-			out before, out ab, out o, out after, out af);
+	OverlayFn(l,l, ang_tol, dist_sq,
+		  out before, out ab, out o, out after, out af);
 
 	Assert.IsNull(before);
 	Assert.IsNull(after);
 	Assert.IsNotNull(o);
-	
+
 	// same length modulo epsilon
 	Assert.Less(o.Dir.LengthSq, l.Dir.LengthSq * 1.00001);
 
 
 	// Now with the shifted version:
-	LineSeg.Overlay(l,ll, partol, dist_sq,
+	OverlayFn(l,ll, ang_tol, dist_sq,
 			out before, out ab, out o, out after, out af);
-
 
 	Assert.IsNull(before);
 	Assert.IsNull(after);
 	Assert.IsNotNull(o);
 	Assert.Less(o.Dir.LengthSq, l.Dir.LengthSq * 1.00001);
 	Assert.Greater(o.Dir.LengthSq, l.Dir.LengthSq * 0.9999);
+
       }
     }
 
     [Test()]
     public void TestRotated() {
       double max_rotang = 10.0 / 180.0 * Math.PI;
-      double tol = Vector.GetParTolerance(max_rotang);
+      double ang_tol = max_rotang; 
       foreach (LineSeg l in Take(1000,LineSegs)) {
 	double ang = Double() * max_rotang;
 	if (Boolean())
@@ -77,12 +101,12 @@ namespace Mwsw.Test {
 	
 	// Come up w/ an appropriate distance threshold
 	// (that ll will pass.)
-	double threshdist = Math.Sin(ang) * l.Dir.Length;
+	double threshdist = Math.Sin(ang) * l.Dir.Length * 2.0;
 	threshdist *= threshdist;
 
 	LineSeg o = null; LineSeg before = null; LineSeg after = null;
 	bool ab,af;
-	LineSeg.Overlay(l,ll, threshdist, tol,
+	OverlayFn(l,ll, ang_tol,threshdist,
 			out before, out ab, out o, out after, out af);
 
 	Assert.IsNull(before);
@@ -98,7 +122,6 @@ namespace Mwsw.Test {
 	} else {
 	  Assert.Less(o.Dir.LengthSq, l.Dir.LengthSq * 1.0001);
 	}
-
 	
 	//Assert.Greater(o.Dir.LengthSq, nlength * 0.99);
       }
@@ -106,56 +129,62 @@ namespace Mwsw.Test {
 
     [Test()]
     public void TestOverlaps() {
+      double mindist = 0.0000001;
       foreach (LineSeg l in Take(1000,LineSegs)) {
 	// Test overlaps after:
-	double t = Double() * 0.5 + 0.5;
+	double t = Double() * 0.5 + 0.4;
 	LineSeg ll = new LineSeg(l.Start + (l.Dir * t),
 				 l.Dir);
+	
+	if (Boolean())
+	  ll = new LineSeg(ll.End, -1.0 * ll.Dir);
 
 	LineSeg o = null; LineSeg before = null; LineSeg after = null;
 	bool ab,af;
 	
-	LineSeg.Overlay(l,ll, 0.0001, l.Dir.LengthSq * 0.000001, 
+	OverlayFn(l,ll, 0.0001, mindist,
 			out before, out ab, out o, out after, out af);
-	
 	Assert.IsNotNull(before);
 	Assert.IsNotNull(o);
 	Assert.IsNotNull(after);
-	
+
 	Assert.IsTrue(ab); // some of 'a' before
 	Assert.IsFalse(af); // some of 'b' after.
 
-	Assert.Less(before.Dir.Length + o.Dir.Length, l.Dir.Length + 0.0001);
-	Assert.Less(o.Dir.Length + after.Dir.Length,  ll.Dir.Length + 0.0001);
-	
-	Assert.Less(o.Dir.Length, (1.0 - t) * l.Dir.Length + 0.0001);
+	Assert.Less(before.Dir.Length + o.Dir.Length, l.Dir.Length + mindist);
+	Assert.Less(o.Dir.Length + after.Dir.Length,  ll.Dir.Length + mindist);
+	Assert.Less(o.Dir.Length, (1.0 - t) * l.Dir.Length + mindist);
 
-	
+	AssertNoOverlap(o,before,  0.0001, mindist);
+	AssertNoOverlap(o,after,  0.0001, mindist);
       }
       
       foreach (LineSeg l in Take(1000,LineSegs)) {
 	// Test overlaps before:
-	double t = Double() * 0.5 + 0.5;
+	double t = Double() * 0.5 + 0.4;
 	LineSeg ll = new LineSeg(l.Start - (l.Dir * t),
 				 l.Dir);
 	
 	LineSeg o = null; LineSeg before = null; LineSeg after = null;
 	bool ab,af;
 	
-	LineSeg.Overlay(l,ll, 0.0001, l.Dir.LengthSq * 0.000001, 
+	OverlayFn(l,ll, 0.0001, mindist,
 			out before, out ab, out o, out after, out af);
-	
+
 	Assert.IsNotNull(before);
 	Assert.IsNotNull(o);
 	Assert.IsNotNull(after);
-	
+
 	Assert.IsTrue(af); // some of 'b' before
 	Assert.IsFalse(ab); // some of 'a' after.
 
-	Assert.Less(before.Dir.Length + o.Dir.Length, ll.Dir.Length + 0.0001);
-	Assert.Less(o.Dir.Length + after.Dir.Length,  l.Dir.Length + 0.0001);
-	Assert.Less(o.Dir.Length, (1.0 - t) * l.Dir.Length + 0.0001);
+	Assert.Less(before.Dir.Length + o.Dir.Length, ll.Dir.Length + mindist);
+	Assert.Less(o.Dir.Length + after.Dir.Length,  l.Dir.Length + mindist);
+	Assert.Less(o.Dir.Length, (1.0 - t) * l.Dir.Length + mindist);
 
+	AssertNoOverlap(o,before,  0.0001, mindist);
+	AssertNoOverlap(o,after,  0.0001, mindist);
+	
       }
     }
 
@@ -176,7 +205,7 @@ namespace Mwsw.Test {
 	LineSeg o = null; LineSeg before = null; LineSeg after = null;
 	bool ab,af;
 	
-	LineSeg.Overlay(l,ll, 0.0001, l.Dir.LengthSq * 0.000001, 
+	OverlayFn(l,ll, 0.0001, l.Dir.LengthSq * 0.000001, 
 			out before, out ab, out o, out after, out af);
 	Assert.IsNull(o);
 	Assert.IsNull(before);
@@ -184,5 +213,47 @@ namespace Mwsw.Test {
 	
       }
     }
+
+    [Test()]
+    public void TestKnown() {
+      LineSeg a = LineSeg.FromEndpoints(new Vector(0,0),
+					new Vector(0,1) );
+      LineSeg b = LineSeg.FromEndpoints(new Vector(0,0.5),
+					new Vector(0,1.5) );
+      LineSeg before,after,overlap;
+      bool a_before,a_after;
+      OverlayFn(a,b,0.0001,0.0001,out before, out a_before,
+		out overlap,
+		out after, out a_after);
+      
+
+      AssertLinesEqual(overlap,
+		       LineSeg.FromEndpoints(new Vector(0,0.5),
+					     new Vector(0,1.0) ), 0.0001);
+
+
+
+      Assert.IsTrue(a_before);
+      AssertLinesEqual(before,
+		       LineSeg.FromEndpoints(new Vector(0,0),
+					     new Vector(0,0.5)), 0.0001);
+
+      Assert.IsFalse(a_after);
+      AssertLinesEqual(after,
+		       LineSeg.FromEndpoints( new Vector(0,1.0),
+					       new Vector(0,1.5) ), 0.0001);
+		       
+    }
+
+
+    protected void AssertVectorsEqual(Vector a, Vector b, double epsilon) {
+      Assert.Less( (a - b).LengthSq, epsilon);
+    }
+
+    protected void AssertLinesEqual(LineSeg a, LineSeg b, double epsilon) {
+      AssertVectorsEqual(a.Start,b.Start,epsilon);
+      AssertVectorsEqual(a.End,b.End,epsilon);
+    }
+      
   }
 }
