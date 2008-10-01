@@ -27,11 +27,41 @@ namespace Mwsw.Test {
 
     [Test()]
     public void TestLineSegIntersect() {
-      foreach (Aabb box in Take(10,Aabbs)) {
+      foreach (Aabb box in Take(100,Aabbs)) {
 	checkBox(box);
 	Aabb a,b,c,d;
 	box.QuadBreak(out a, out b, out c, out d);
 	checkBox(a); checkBox(b); checkBox(c); checkBox(d);
+
+	
+	Aabb[] subs = new Aabb[]{a,b,c,d};
+	
+	foreach (Aabb t in subs) {
+	  Assert.IsTrue(box.Contains(t));
+	  Assert.IsTrue(box.Intersects(t)); 
+	  Assert.IsTrue(t.Intersects(box));
+	  Assert.IsFalse(t.Contains(box));
+
+	  Assert.IsTrue(Math.Abs((box.H * 0.5) - t.H) < 0.00001, "Not half height?");
+	  Assert.IsTrue(Math.Abs((box.W * 0.5) - t.W) < 0.00001, "Not half width?");
+
+	  foreach (Aabb tt in subs) {
+	    if (tt == t) 
+	      continue;
+	    Assert.IsFalse(t.Contains(tt));
+	    Assert.IsFalse(tt.Contains(t));
+	    if (t.Intersects(tt)) {
+	      Aabb x = Aabb.Intersect(t,tt);
+	      Assert.IsTrue(x.W >= 0.0, "Neg width?");
+	      Assert.IsTrue(x.H >= 0.0, "Neg height?");
+	      Assert.IsTrue((x.W*x.H) < 0.000001, "non-tiny intersection?");
+	    }
+	  }
+	}
+
+	foreach (Aabb o in new Aabb[]{b,c,d}) 
+	  Assert.IsFalse(a.Contains(o));
+
       }
     }
 
