@@ -138,12 +138,14 @@ namespace Mwsw.Test {
     }
     public IEnumerable<Vector> Vectors { get { return Gen<Vector>(GenVector); } }
 
-    public IEnumerable<LineSeg> LineSegs { 
+    public virtual IEnumerable<LineSeg> LineSegs { 
       get {
 	foreach (Pair<Vector,Vector> vs in Zip<Vector,Vector>(Vectors,Vectors)) {
-	  yield return LineSeg.FromEndpoints(vs.First,vs.Second);
+	  yield return new LineSeg(vs.First,vs.Second.Normalize() * LineSegLength);
 	}
       }
     }
+
+    protected virtual double LineSegLength { get { return Double(); } }
   }
 }

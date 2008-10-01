@@ -43,7 +43,10 @@
 
   <target name="specific-test" depends="buildtests">
     <nunit2>
+      <formatter type="Xml" usefile="true" outputdir="test/results/" 
+		 extension=".test.xml"/> 
       <formatter type="Plain"/>
+ 
       <test assemblyname="build/tests.dll" testname="${test}"/>
     </nunit2>
   </target>

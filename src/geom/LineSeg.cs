@@ -146,7 +146,20 @@ namespace Mwsw.Geom {
     }
     
     public override string ToString() {
-      return "[" + Start + "->" + End + "]";
+      return "[" + Start + "," + End + "]";
+    }
+
+    public Aabb BBox { get {
+	
+	Vector ep = this.End + (0.01 * this.Dir.Perp);
+	
+	double xmin = Math.Min(this.Start.X, ep.X);
+	double xmax = Math.Max(this.Start.X, ep.X);
+	double ymin = Math.Min(this.Start.Y, ep.Y);
+	double ymax = Math.Max(this.Start.Y, ep.Y);
+
+	return new Aabb(xmin,xmax,ymin,ymax);
+      }
     }
 
   }

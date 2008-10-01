@@ -27,14 +27,21 @@ using Mwsw.Util;
 namespace Mwsw.Test {
 
   /// This test inherits all the LineSeg tests,
-  ///  but runs them under a spatial index.
+  ///  but runs them using the LineSegOverlay operation instead of directly
+  ///  calling LineSeg.Overlay().
   [TestFixture()]
-  public class LineSegOverlayTest : Generators {// LineSegTest {
+  public class LineSegOverlayTest : LineSegTest {
 
-    protected ISegIdx GetIndex(double disttol,
+    protected virtual ISegIdx GetIndex(double disttol,
 				 double ang_tol) {
       return new NullSegIdx();
     }
+
+    protected virtual void DumpIndex(ISegIdx i) {
+      // do nothing
+    }
+
+    protected virtual int TestCount { get { return 500; } }
 
     private class OverlayObj : IHasLine {
       private LineSeg m_seg;
@@ -42,7 +49,9 @@ namespace Mwsw.Test {
       public OverlayObj(LineSeg l, bool froma) { m_seg = l; FromA = froma; }
       public LineSeg LineSeg { get { return m_seg; } }
     }
-    protected /*override*/ void OverlayFn(LineSeg a,
+    protected 
+      override  
+      void OverlayFn(LineSeg a,
 				      LineSeg b,
 				      double ang_tol,
 				      double disttol,
@@ -97,9 +106,9 @@ namespace Mwsw.Test {
 	  ls.First.PointDistanceSq(overlap.End, out end_tval);
 
 
-	  bool dir = (start_tval - disttol <= 0.0); 
+	  bool dir = (start_tval  - disttol <= 0.0); 
 
-	  if (!dir) {
+	  if (dir) {
 	    after = ls.First;
 	    a_after = ls.Second.FromA;
 	  } else {
@@ -121,19 +130,20 @@ namespace Mwsw.Test {
       public override string ToString() { return "("  + m_idx + ")"; }
     }
 
-    //    [Test()]
+    [Test()]
     public void TestUnrelated() {
       // Super strict...
       double ang_tol = System.Double.Epsilon;
       double dist_tol = System.Double.Epsilon;
       Dictionary<int,bool> seen = new Dictionary<int,bool>();
 
+      ISegIdx spidx = GetIndex(dist_tol,ang_tol);
       LineSegOverlay<NumLineSeg> overlay =
-	new LineSegOverlay<NumLineSeg>(GetIndex(dist_tol,ang_tol),
+	new LineSegOverlay<NumLineSeg>(spidx,
 				       ang_tol,dist_tol);
 
       int idx = 0;
-      foreach (LineSeg l in Take(1000,LineSegs)) {
+      foreach (LineSeg l in Take(TestCount,LineSegs)) {
 	overlay.Insert(new NumLineSeg(l,idx++));
       }
 
@@ -147,20 +157,22 @@ namespace Mwsw.Test {
 	}
       }
 
-      for (int i = 0; i < 1000; i++) 
+      for (int i = 0; i < TestCount; i++) 
 	Assert.IsTrue(seen[i]);
 
+      DumpIndex(spidx);
     }
 
     [Test()]
     public void TestBeforeAndAfter() {
-      int count = 500; // run 100x
+      int count = TestCount;
       double ang_tol = 0.0001;
       double dist_tol = 0.000001;
       Dictionary<int, int> seen = new Dictionary<int,int>();
 
+      ISegIdx spidx = GetIndex(dist_tol,ang_tol);
       LineSegOverlay<NumLineSeg> overlay =
-	new LineSegOverlay<NumLineSeg>(GetIndex(dist_tol,ang_tol),
+	new LineSegOverlay<NumLineSeg>(spidx,
 				       ang_tol,dist_tol);
 
       int idx = 0;
@@ -172,7 +184,7 @@ namespace Mwsw.Test {
 				    new Vector(0,1));
 	}
 	lines[idx] = l;
-	//	overlay.Insert(new NumLineSeg(l,idx));
+
 	idx++;
 
       }
@@ -218,6 +230,7 @@ namespace Mwsw.Test {
 
       }
       
+      DumpIndex(spidx);
 
       int rcount = 0;
       foreach (Pair<LineSeg,IEnumerable<NumLineSeg>> res in overlay.Segments) {

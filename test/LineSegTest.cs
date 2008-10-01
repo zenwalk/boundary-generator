@@ -129,7 +129,8 @@ namespace Mwsw.Test {
 
     [Test()]
     public void TestOverlaps() {
-      double mindist = 0.0000001;
+      double mindist = 0.00000000001;
+      double minang = 0.0000001;
       foreach (LineSeg l in Take(1000,LineSegs)) {
 	// Test overlaps after:
 	double t = Double() * 0.5 + 0.4;
@@ -142,7 +143,7 @@ namespace Mwsw.Test {
 	LineSeg o = null; LineSeg before = null; LineSeg after = null;
 	bool ab,af;
 	
-	OverlayFn(l,ll, 0.0001, mindist,
+	OverlayFn(l,ll, minang, mindist,
 			out before, out ab, out o, out after, out af);
 	Assert.IsNotNull(before);
 	Assert.IsNotNull(o);
@@ -168,7 +169,7 @@ namespace Mwsw.Test {
 	LineSeg o = null; LineSeg before = null; LineSeg after = null;
 	bool ab,af;
 	
-	OverlayFn(l,ll, 0.0001, mindist,
+	OverlayFn(l,ll, minang, mindist,
 			out before, out ab, out o, out after, out af);
 
 	Assert.IsNotNull(before);
@@ -225,6 +226,12 @@ namespace Mwsw.Test {
       OverlayFn(a,b,0.0001,0.0001,out before, out a_before,
 		out overlap,
 		out after, out a_after);
+      
+      //      Console.WriteLine("a:       " + a);
+      //      Console.WriteLine("b:       " + b);
+      //      Console.WriteLine("overlap: " + overlap);
+      //      Console.WriteLine("before:  " + before);
+      //      Console.WriteLine("after:   " + after);
       
 
       AssertLinesEqual(overlap,
