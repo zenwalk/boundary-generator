@@ -115,10 +115,10 @@ namespace Mwsw.BoundGen.ArcIntegration
 			IFeatureCursor outcursor = outp.Insert(true);
 			
 			foreach(Pair<Pair<int,int>,Pair<int,int>> ss in sa.SegsAndShells) {
-				int lhs_fid = ss.First.First; 
-				int lhs_shellid = ss.First.Second;
-				int rhs_fid = ss.Second.First;
-				int rhs_shellid = ss.Second.Second;
+				int rhs_fid = ss.First.First; 
+				int rhs_shellid = ss.First.Second;
+				int lhs_fid = ss.Second.First;
+				int lhs_shellid = ss.Second.Second;
 				
 				foreach (Pair<Pair<int,int>,List<LineSeg>> linestring in sa.GetStrings(ss)) {
 					IPolyline line = assemblePolyLine(linestring.Second);
