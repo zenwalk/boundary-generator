@@ -38,7 +38,7 @@ namespace Mwsw.Test {
     
     // Choose a density/length that won't crush the index with too many crossing
     //   segments: 
-    protected override double LineSegLength { get { return (Double() * 100.0)/TestCount; } } 
+    protected override double LineSegLength { get { return (Double() * 100.0)/TestCount + 0.01; } } 
     //protected override double LineSegLength { get { return 0.002; } } 
     
     protected override void DumpIndex(ISegIdx i) {

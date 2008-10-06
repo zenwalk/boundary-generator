@@ -14,6 +14,8 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *****/
+using System; 
+using System.Collections.Generic;
 
 namespace Mwsw.Util {
   
@@ -23,5 +25,28 @@ namespace Mwsw.Util {
     public A First { get { return m_a; } }
     public B Second { get { return m_b; } }
 
+    public override int GetHashCode() { 
+    	return (m_a != null ? m_a.GetHashCode() : 0) ^ (m_b != null ? m_b.GetHashCode() : 0);
+    }
+	public override bool Equals(object obj)	{
+    	Pair<A,B> o = obj as Pair<A, B>;
+    	if (o == null) return false;
+    	return (m_a != null ? m_a.Equals(o.m_a) : o.m_a == null) &&
+    		(m_b != null ? m_b.Equals(o.m_b) : o.m_b == null);
+ 	}
+    
+    public static IEnumerable<Pair<A,A>> Pairs(IEnumerable<A> vs) {
+    	int aidx = 0;
+    	int bidx = 0;
+    	foreach (A fst in vs) {
+    		foreach (A snd in vs) {
+    			if (aidx != bidx) {
+    				yield return new Pair<A,A>(fst,snd);
+    			}
+    			bidx++;
+    		}
+    		aidx++; bidx = 0;
+    	}
+    }
   }
 }

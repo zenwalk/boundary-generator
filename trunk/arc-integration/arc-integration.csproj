@@ -54,11 +54,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="aodata\AoFeatureClassName.cs" />
+    <Compile Include="aodata\AoGPParameter.cs" />
+    <Compile Include="aodata\AoGPType.cs" />
+    <Compile Include="aodata\AoTable.cs" />
     <Compile Include="aointrospect\AOIntrospector.cs" />
     <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="BGenImp.cs" />
     <Compile Include="BoundGen.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="aointrospect" />
+    <Folder Include="aodata" />
   </ItemGroup>
 </Project>

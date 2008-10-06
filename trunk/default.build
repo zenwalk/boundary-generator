@@ -21,8 +21,10 @@
   <target name="buildtests" depend="build">
     <csc target="library" output="build/tests.dll" debug="true">
       <references>
-	<include name="/usr/lib/NAnt/lib/mono/2.0/nunit.core.dll"/>
-	<include name="/usr/lib/NAnt/lib/mono/2.0/nunit.framework.dll"/>
+<!--	<include name="/usr/lib/NAnt/lib/mono/2.0/nunit.core.dll"/> -->
+<!--	<include name="/usr/lib/NAnt/lib/mono/2.0/nunit.framework.dll"/> -->
+	<include name="c:\Program Files\NAnt\nant-0.85\bin\lib\net\2.0\nunit.core.dll"/>
+    <include name="c:\Program Files\NAnt\nant-0.85\bin\lib\net\2.0\nunit.framework.dll"/>
 	<!-- <include name="nunit.framework.dll"/> -->
 	<include name="build/boundgen.dll"/>
       </references>
