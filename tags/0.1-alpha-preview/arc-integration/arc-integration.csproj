@@ -1,0 +1,70 @@
+﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <ProjectGuid>{5C8340AF-C9C4-4994-B0D6-8B85606E4ECF}</ProjectGuid>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <OutputType>Library</OutputType>
+    <RootNamespace>arc_integration</RootNamespace>
+    <AssemblyName>arc-integration</AssemblyName>
+    <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+    <NoStdLib>False</NoStdLib>
+    <WarningLevel>4</WarningLevel>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <OutputPath>bin\Debug\</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>Full</DebugType>
+    <Optimize>False</Optimize>
+    <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <StartAction>Program</StartAction>
+    <StartProgram>c:\Program Files\ArcGIS\bin\arcmap.exe</StartProgram>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <OutputPath>bin\Release\</OutputPath>
+    <DebugSymbols>False</DebugSymbols>
+    <DebugType>None</DebugType>
+    <Optimize>True</Optimize>
+    <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
+    <DefineConstants>TRACE</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
+    <RegisterForComInterop>True</RegisterForComInterop>
+    <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
+    <BaseAddress>4194304</BaseAddress>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <FileAlignment>4096</FileAlignment>
+  </PropertyGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.Targets" />
+  <ItemGroup>
+    <Reference Include="boundgen">
+      <HintPath>..\build\boundgen.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+    </Reference>
+    <Reference Include="CustomMarshalers" />
+    <Reference Include="ESRI.ArcGIS.ADF" />
+    <Reference Include="ESRI.ArcGIS.Catalog" />
+    <Reference Include="ESRI.ArcGIS.DataSourcesFile" />
+    <Reference Include="ESRI.ArcGIS.Geodatabase" />
+    <Reference Include="ESRI.ArcGIS.Geometry" />
+    <Reference Include="ESRI.ArcGIS.Geoprocessing" />
+    <Reference Include="ESRI.ArcGIS.System" />
+    <Reference Include="System" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="aodata\AoFeatureClassName.cs" />
+    <Compile Include="aodata\AoGPParameter.cs" />
+    <Compile Include="aodata\AoGPType.cs" />
+    <Compile Include="aodata\AoTable.cs" />
+    <Compile Include="aointrospect\AOIntrospector.cs" />
+    <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="BGenImp.cs" />
+    <Compile Include="BoundGen.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="aointrospect" />
+    <Folder Include="aodata" />
+  </ItemGroup>
+</Project>

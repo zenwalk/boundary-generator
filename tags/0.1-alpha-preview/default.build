@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+
+<project name="boundary-generator" default="build" basedir=".">
+
+  <property name="debug" value="true" overwrite="false"/>
+  <property name="outputdll" value="boundgen.dll"/>
+
+  <target name="build">
+    <mkdir dir="build"/>
+    <csc target="library" output="build/${outputdll}" debug="${debug}">
+      <sources>
+	<include name="src/**/*.cs"/>
+      </sources>
+    </csc>
+  </target>
+  
+  <target name="clean">
+    <delete dir="build"/>
+  </target>
+  
+  <target name="buildtests" depend="build">
+    <csc target="library" output="build/tests.dll" debug="true">
+      <references>
+<!--	<include name="/usr/lib/NAnt/lib/mono/2.0/nunit.core.dll"/> -->
+<!--	<include name="/usr/lib/NAnt/lib/mono/2.0/nunit.framework.dll"/> -->
+	<include name="c:\Program Files\NAnt\nant-0.85\bin\lib\net\2.0\nunit.core.dll"/>
+    <include name="c:\Program Files\NAnt\nant-0.85\bin\lib\net\2.0\nunit.framework.dll"/>
+	<!-- <include name="nunit.framework.dll"/> -->
+	<include name="build/boundgen.dll"/>
+      </references>
+
+      <sources>
+	<include name="test/**/*.cs"/>
+      </sources>
+
+    </csc>
+  </target>
+
+  <target name="test" depends="buildtests">
+    <nunit2>
+      <formatter type="Plain"/>
+      <test assemblyname="build/tests.dll"/>
+    </nunit2>
+  </target>
+
+  <target name="specific-test" depends="buildtests">
+    <nunit2>
+      <formatter type="Xml" usefile="true" outputdir="test/results/" 
+		 extension=".test.xml"/> 
+      <formatter type="Plain"/>
+ 
+      <test assemblyname="build/tests.dll" testname="${test}"/>
+    </nunit2>
+  </target>
+</project>
