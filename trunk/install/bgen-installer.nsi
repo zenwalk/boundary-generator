@@ -8,10 +8,12 @@
 
 ; Preliminaries
 ; --------------
-Name "MWSW Boundary Generator"
+!Define PRODUCT "MWSW Boundary Generator"
+!define SUBSCRIPTION_EMAIL "mailto:?to=mwsw-prod-announce-subscribe@googlegroups.com&subject=Subscribe&body=(empty)"
+Name "${PRODUCT}"
 Caption "MWSW Boundary Generator v. 0.1"
 OutFile "boundarygen_alpha.exe"
-InstallDir "$PROGRAMFILES\MwSw"
+InstallDir "$PROGRAMFILES\MWSW\BoundGen"
 InstallDirRegKey HKLM "Software\MWSW_BoundGen" "Install_Dir"
 RequestExecutionLevel admin
 
@@ -30,6 +32,16 @@ RequestExecutionLevel admin
   
 !insertmacro MUI_UNPAGE_CONFIRM
 !insertmacro MUI_UNPAGE_INSTFILES
+
+; Finish page options
+  !define MUI_FINISHPAGE_NOREBOOTSUPPORT
+  !define MUI_FINISHPAGE_TITLE "Installation Complete"
+  !define MUI_FINISHPAGE_TEXT "${PRODUCT} has been installed. To use it, add the MWSW Boundary Generator tool to a custom toolbox!"
+  !define MUI_FINISHPAGE_RUN 
+  !define MUI_FINISHPAGE_RUN_FUNCTION OpenSubscriptionEmail
+  !define MUI_FINISHPAGE_RUN_TEXT "Subscribe to recieve updates via email. "
+!insertmacro MUI_PAGE_FINISH
+ 
 
 ;
 
@@ -61,10 +73,10 @@ Section "Boundary Generator" SecMain
 
   
   ; Write the uninstall keys for Windows
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Example2" "DisplayName" "MWSW Boundary Generator"
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Example2" "UninstallString" '"$INSTDIR\uninstall.exe"'
-  WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Example2" "NoModify" 1
-  WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Example2" "NoRepair" 1
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\MWSW_BGen" "DisplayName" "MWSW Boundary Generator"
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\MWSW_BGen" "UninstallString" '"$INSTDIR\uninstall.exe"'
+  WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\MWSW_BGen" "NoModify" 1
+  WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\MWSW_BGen" "NoRepair" 1
 
   Return
 
@@ -91,8 +103,13 @@ error_no_dotnet:
   Delete $INSTDIR\LICENSE.txt
   Delete $INSTDIR\uninstall.exe
   RMDir "$INSTDIR"
+  DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\MWSW_BGen"
 
 SectionEnd
+
+Function OpenSubscriptionEmail
+  ExecShell "open" "${SUBSCRIPTION_EMAIL}"
+FunctionEnd
 
 ; Copied from http://nsis.sourceforge.net/Get_directory_of_installed_.NET_runtime
 ; ...
