@@ -8,6 +8,7 @@
  */
 
 using System;
+using System.Reflection;
 using System.Collections.Generic;
 
 namespace Mwsw.BoundGen.ArcIntegration.AOIntrospect
@@ -18,18 +19,30 @@ namespace Mwsw.BoundGen.ArcIntegration.AOIntrospect
 	public class AOIntrospector
 	{
 		private object m_obj;
-		private Type m_t;
-		public AOIntrospector(object v, Type knowntype)
+
+		private static List<Assembly> _asms;
+		public AOIntrospector(object v)
 		{
 			m_obj = v;
-			m_t = knowntype;
 		}
 		
 		public IEnumerable<System.Type> GetImplementedInterfaces() {
-			foreach(Type t in m_t.Assembly.GetExportedTypes()) {
-				if (t.IsInterface) {
-					if (t.IsInstanceOfType(m_obj))
-						yield return t;
+			if (_asms == null) {
+				_asms = new List<Assembly>();
+				foreach (AssemblyName n in Assembly.GetExecutingAssembly().GetReferencedAssemblies()) {
+					if (n.FullName.Contains("ESRI.ArcGIS")) {
+				   		Assembly arcasm = Assembly.Load(n);
+				   		_asms.Add(arcasm);
+					}
+				}
+			}
+			
+			foreach (Assembly arcasm in _asms) {
+				foreach(Type t in arcasm.GetExportedTypes()) {
+					if (t.IsInterface) {
+						if (t.IsInstanceOfType(m_obj))
+							yield return t;
+					}
 				}
 			}
 		}
